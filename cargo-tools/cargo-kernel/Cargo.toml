@@ -1,0 +1,8 @@
+[package]
+name = "cargo-kernel"
+version = "0.1.0"
+authors = ["denis.duzh"]
+edition = "2018"
+
+[dependencies]
+cargo = "0.52.0"
