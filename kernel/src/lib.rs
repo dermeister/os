@@ -2,10 +2,16 @@
 
 use core::panic::PanicInfo;
 
+#[macro_use]
+mod vga;
+mod spinlock;
+mod lazy;
+
 #[no_mangle]
 pub extern "C" fn main() -> ! {
-    let vga = 0xb8000 as *mut u32;
-    unsafe { *vga = 0x2f4b2f4f };
+    for i in 0.. {
+        println!("Next number is: {}", i);
+    }
 
     loop {}
 }
