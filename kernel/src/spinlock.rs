@@ -17,7 +17,7 @@ impl<T> Spinlock<T> {
 
     pub fn lock(&self) -> SpinlockGuard<T> {
         loop {
-            let was_locked = self.locked.swap(true, Ordering::SeqCst);
+            let was_locked = self.locked.swap(true, Ordering::Acquire);
             if !was_locked { break; }
         }
 
@@ -45,6 +45,6 @@ impl<'a, T> DerefMut for SpinlockGuard<'a, T> {
 
 impl<'a, T> Drop for SpinlockGuard<'a, T> {
     fn drop(&mut self) {
-        self.spinlock.locked.store(false, Ordering::SeqCst);
+        self.spinlock.locked.store(false, Ordering::Release);
     }
 }

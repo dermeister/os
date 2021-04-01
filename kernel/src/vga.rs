@@ -1,7 +1,8 @@
 use core::fmt;
 use core::fmt::Write;
-use crate::spinlock::Spinlock;
+
 use crate::lazy::SyncLazy;
+use crate::spinlock::Spinlock;
 
 #[derive(Copy, Clone)]
 enum VgaColor {
@@ -14,7 +15,7 @@ enum VgaColor {
 struct VgaChar(u16);
 
 impl VgaChar {
-    pub fn new(c: u8, background: VgaColor, foreground: VgaColor) -> Self {
+    fn new(c: u8, background: VgaColor, foreground: VgaColor) -> Self {
         let background = (background as u16) << 12;
         let foreground = (foreground as u16) << 8;
         let c = c as u16;
@@ -26,12 +27,12 @@ const VGA_ROWS: usize = 25;
 const VGA_COLS: usize = 80;
 
 type VgaRow = [VgaChar; VGA_COLS];
-type VgaBuffer = [VgaRow; VGA_ROWS];
+type VgaScreen = [VgaRow; VGA_ROWS];
 
 pub struct VgaWriter {
     row: usize,
     col: usize,
-    buffer: &'static mut VgaBuffer,
+    screen: &'static mut VgaScreen,
     background: VgaColor,
     foreground: VgaColor,
 }
@@ -41,12 +42,12 @@ impl VgaWriter {
         let mut writer = VgaWriter {
             row: 0,
             col: 0,
-            buffer: unsafe { &mut *(0xb8000 as *mut VgaBuffer) },
+            screen: unsafe { &mut *(0xb8000 as *mut VgaScreen) },
             foreground: VgaColor::Black,
             background: VgaColor::White,
         };
 
-        writer.clean();
+        writer.clear();
         writer
     }
 
@@ -62,8 +63,8 @@ impl VgaWriter {
 
     fn scroll_if_needed(&mut self) {
         if self.row == VGA_ROWS {
-            for i in 1..self.buffer.len() {
-                self.buffer.copy_within(i..=i, i - 1);
+            for i in 1..self.screen.len() {
+                self.screen.copy_within(i..=i, i - 1);
             }
 
             self.row -= 1;
@@ -76,7 +77,7 @@ impl VgaWriter {
     }
 
     fn write_char(&mut self, c: u8) {
-        self.buffer[self.row][self.col] = VgaChar::new(c, self.background, self.foreground);
+        self.screen[self.row][self.col] = VgaChar::new(c, self.background, self.foreground);
         self.next_position();
     }
 
@@ -89,8 +90,8 @@ impl VgaWriter {
         }
     }
 
-    fn clean(&mut self) {
-        for c in self.buffer.iter_mut().flatten() {
+    fn clear(&mut self) {
+        for c in self.screen.iter_mut().flatten() {
             *c = VgaChar::new(0, VgaColor::White, VgaColor::White);
         }
     }
