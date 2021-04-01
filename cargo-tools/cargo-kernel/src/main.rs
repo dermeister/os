@@ -12,17 +12,7 @@ fn compile() -> (String, Option<String>) {
     let manifest_path = format!("{}/Cargo.toml", current_dir.to_str().unwrap());
 
     let mut config = Config::default().unwrap();
-    config.configure(
-        0,
-        false,
-        Some("always"),
-        false,
-        false,
-        false,
-        &None,
-        &[],
-        &[],
-    ).unwrap();
+    config.configure(0, false, Some("always"), false, false, false, &None, &[], &[]).unwrap();
 
     let ws = Workspace::new(manifest_path.as_ref(), &config).unwrap();
 
@@ -90,9 +80,7 @@ fn run(kernel_image: &str, debugging: bool) {
     let mut command = command.args(&["-kernel", kernel_image]);
 
     if debugging {
-        command = command
-            .arg("-s")
-            .arg("-S");
+        command = command.arg("-s").arg("-S");
     }
 
     if cfg!(windows) {
@@ -104,6 +92,7 @@ fn run(kernel_image: &str, debugging: bool) {
 
 fn main() {
     maybe_allow_nightly_features();
+
     let (rustc_output, build_script_output) = compile();
     let kernel_image = link(&rustc_output, build_script_output.as_ref().map(|s| s.as_str()));
 
